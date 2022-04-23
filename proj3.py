@@ -12,8 +12,12 @@
 #1
 class Sbox:
     def __init__(self, input, output) -> None:
-        self.input = input
-        self.output = output
+        self.box = dict(zip(input, output))
+    def __str__(self):
+        res = ''
+        for i in self.box:
+            res += f'{i.hex} | {self.box[i].hex}\n'
+        return res
 
 class Number:
     def __init__(self, num):
@@ -38,9 +42,48 @@ class Number:
 
 class Table:
     def __init__(self, sbox):
-        self.sbox = sbox
-    def buildTable(self):
-        x = []
+        self.box = sbox.box
+        self.table = self.buildTable(0)
+    
+    def res(self, x, a):
+        b = []
+        for i in range(len(a.bits)):
+            if a.bits[i] == 1:
+                b.append(i)
+        if (len(b) == 0):
+            return 0
+        x_res = b[0]
+        for i in range(1, len(x.bits)):
+            x_res = x_res ^ x.bits[i]
+        return x_res
+
+    def NL(self, a, b, box):
+        yeses = 0
+        a = Number(a)
+        b = Number(b)
+        for i in box:
+            x_res = self.res(i, a)
+            y_res = self.res(box[i], b)
+            yeses += x_res == y_res
+
+        return yeses
+
+    def buildTable(self, dec):
+        table = '     '
+        for i in self.box:
+            table += f'{i.hex:>5}'
+        table += '\n'
+        for i in self.box:
+            line = f'{i.hex:>5}'
+            for j in self.box:
+                nl = self.NL(i.val, j.val, self.box) - dec
+                line += f'{nl:>5}'
+            table += line + '\n'
+        self.table = table
+        return table
+
+    def __str__(self):
+        return self.table
 
 input = []
 for i in range(8):
@@ -57,8 +100,10 @@ output = [
 ]
 
 box = Sbox(input, output)
-for i in box.input:
-    print(i, end="\n\n")
+table = Table(box)
+table.buildTable(4)
+print(table)
+    
 #2
 
 #3
